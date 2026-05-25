@@ -1,82 +1,123 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
+const ROLES = ['applicant', 'admin', 'reviewer', 'superadmin'];
+const STATUS = ['active', 'inactive', 'suspended', 'pending_verification'];
 
-
-const userSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true,
-        index: true,
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Name is required'],
+      trim: true,
+      minlength: [2, 'Name must be at least 2 characters'],
+      maxlength: [100, 'Name cannot exceed 100 characters'],
     },
     email: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        lowercase: true,
-
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
     },
-    firstname: {
-        type: String,
-        required: true,
-        trim: true,
-        index: true,
+    passwordHash: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: [8, 'Password must be at least 8 characters'],
+      select: false,
     },
-    lastname: {
-        type: String,
-        required: true,
-        trim: true,
-        index: true,
+    phone: {
+      type: String,
+      trim: true,
+      match: [/^\+?[1-9]\d{7,14}$/, 'Please provide a valid phone number'],
     },
+    role: {
+      type: String,
+      enum: {
+        values: ROLES,
+        message: `Role must be one of: ${ROLES.join(', ')}`,
+      },
+      default: 'applicant',
+    },
+    status: {
+      type: String,
+      enum: {
+        values: STATUS,
+        message: `Status must be one of: ${STATUS.join(', ')}`,
+      },
+      default: 'active',
+    },
+    lastLoginAt: {
+      type: Date,
+      default: null,
+    },
+    passwordChangedAt: {
+      type: Date,
+      default: null,
+    },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 10,
+    },
+    lockedUntil: {
+      type: Date,
+      default: null,
+    },
+    refreshToken: {
+      type: String,
+      default: null,
+      select: false, // never returned in queries by default
+    },
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
 
-})
+// Indexes
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ role: 1, status: 1 });
+userSchema.index({ createdAt: -1 });
 
-userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) {
-        return next;
-    }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next;
+// Virtual: full profile link to KYC applications
+userSchema.virtual('kycApplications', {
+  ref: 'KYCApplication',
+  localField: '_id',
+  foreignField: 'userId',
 });
 
-userSchema.methods.isPasswordCorrect = async function (password) {
-    return await bcrypt.compare(password, this.password);
+// Pre-save: hash password if modified
+userSchema.pre('save', async function () {
+  if (!this.isModified('passwordHash')) return;
+  this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
+  this.passwordChangedAt = Date.now();
+});
+
+// Pre-save: hash refresh token if modified
+userSchema.pre('save', async function () {
+  if (!this.isModified('refreshToken') || !this.refreshToken) return;
+  this.refreshToken = await bcrypt.hash(this.refreshToken, 10);
+});
+
+// Instance method: compare password
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.passwordHash);
 };
 
-userSchema.methods.generateAccessToken = function () {
-    return jwt.sign(
-        {
-            id: this._id,
-            username: this.username,
-            email: this.email,
-            fullname: this.fullname,
-
-        },
-        process.env.ACCESS_TOKEN_SECRET,
-        {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN
-        }
-    );
+// Instance method: compare refresh token (bcrypt compare since it's hashed)
+userSchema.methods.compareRefreshToken = async function (candidateToken) {
+  return bcrypt.compare(candidateToken, this.refreshToken);
 };
 
-userSchema.methods.generateRefreshToken = function () {
-    return jwt.sign(
-        {
-            id: this._id
-        },
-        process.env.REFRESH_TOKEN_SECRET,
-        {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN
-        }
-    );
+// Instance method: check if account is locked
+userSchema.methods.isLocked = function () {
+  return this.lockedUntil && this.lockedUntil > Date.now();
 };
 
-
-
-
-
-export const User = mongoose.model("User", userSchema);
+const User = mongoose.model('User', userSchema);
+export default User;

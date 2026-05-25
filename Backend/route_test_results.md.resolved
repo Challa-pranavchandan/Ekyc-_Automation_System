@@ -1,0 +1,58 @@
+# eKYC Backend — Route Test Results
+
+**Base URL:** `http://localhost:8000/api/v1/auth`  
+**Date:** 2026-05-25 13:47 IST
+
+## Results Summary
+
+| # | Route | Method | Scenario | Expected | Actual | Status |
+|---|-------|--------|----------|----------|--------|--------|
+| 1 | `/register` | POST | New user | 201 | 201 | ✅ PASS |
+| 2 | `/register` | POST | Duplicate email | 409 | 409 | ✅ PASS |
+| 3 | `/login` | POST | Wrong password | 401 | 401 | ✅ PASS |
+| 4 | `/login` | POST | Correct credentials | 200 | 200 | ✅ PASS |
+| 5 | `/me` | GET | With valid token | 200 | 200 | ✅ PASS |
+| 6 | `/me` | GET | No token | 401 | 401 | ✅ PASS |
+| 7 | `/change-password` | POST | Valid change | 200 | 200 | ✅ PASS |
+| 8 | `/login` | POST | Login with new password | 200 | 200 | ✅ PASS |
+| 9 | `/refresh-token` | POST | Valid refresh | 200 | 200 | ✅ PASS |
+| 10 | `/logout` | POST | Authenticated user | 200 | 200 | ✅ PASS |
+| 11 | `/me` | GET | After logout (stale token) | 401 | 200 | ⚠️ NOTE |
+
+## Bugs Fixed During Testing
+
+### 1. [ApiError.js](file:///c:/Users/chall/OneDrive/Desktop/Ekyc/Backend/src/utils/ApiError.js) — `errors` undefined (ReferenceError)
+The constructor parameter was named `error` but the body referenced `errors`. Also fixed typo `succsess` → `success`.
+
+```diff
+- this.succsess = false;
+- this.errors = errors;
++ this.success = false;
++ this.errors = error;
+```
+
+### 2. [user.model.js](file:///c:/Users/chall/OneDrive/Desktop/Ekyc/Backend/src/models/user.model.js) — `next is not a function` in pre-save hooks
+Mongoose 7+ async pre-save hooks should **not** accept `next`. The `next` callback pattern is for synchronous hooks only.
+
+```diff
+- userSchema.pre('save', async function (next) {
+-   if (!this.isModified('passwordHash')) return next();
++ userSchema.pre('save', async function () {
++   if (!this.isModified('passwordHash')) return;
+```
+
+### 3. [index.js](file:///c:/Users/chall/OneDrive/Desktop/Ekyc/Backend/src/index.js) — dotenv config path
+The path was [./env](file:///c:/Users/chall/OneDrive/Desktop/Ekyc/Backend/.env) instead of [./.env](file:///c:/Users/chall/OneDrive/Desktop/Ekyc/Backend/.env), causing env vars to not load and MongoDB connection to fail.
+
+### 4. Missing npm packages
+`jsonwebtoken` and `bcryptjs` were imported but not in [package.json](file:///c:/Users/chall/OneDrive/Desktop/Ekyc/Backend/package.json). Installed them.
+
+### 5. [app.js](file:///c:/Users/chall/OneDrive/Desktop/Ekyc/Backend/src/app.js) — Routes not mounted
+Auth routes were never mounted. Added `app.use('/api/v1/auth', authRoutes)` and a global error handler.
+
+### 6. [asyncHandler.js](file:///c:/Users/chall/OneDrive/Desktop/Ekyc/Backend/src/utils/asyncHandler.js) filename typo
+File was named [ayncHandler.js](file:///c:/Users/chall/OneDrive/Desktop/Ekyc/Backend/src/utils/ayncHandler.js) (missing 's'), causing `ERR_MODULE_NOT_FOUND`.
+
+## ⚠️ Note on Test #11
+
+After logout, the access token still works because the JWT is **stateless** — logout only clears the refresh token from the DB. The access token remains valid until it expires. This is standard JWT behavior but worth noting: if you need immediate token invalidation, you'd need a token blacklist/revocation strategy.

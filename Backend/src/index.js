@@ -6,19 +6,21 @@ import { createWorker } from 'tesseract.js';
 
 
 dotenv.config({
-    path: `./env`
+    path: `./.env`
 }
 )
 
 
 connectDB()
-.then(() => {app.listen(process.env.PORT||8000,() => {
-        console.log(`app is running on port ${process.env.PORT}`);
-       })})
-.catch((error) => {
-    console.error("Failed to connect to DB", error);
-    process.exit(1);
-})
+    .then(() => {
+        app.listen(process.env.PORT || 8000, () => {
+            console.log(`app is running on port ${process.env.PORT}`);
+        })
+    })
+    .catch((error) => {
+        console.error("Failed to connect to DB", error);
+        process.exit(1);
+    })
 
 
 
