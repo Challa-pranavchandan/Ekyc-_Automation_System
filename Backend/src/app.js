@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 
 import userRoutes from './routes/user.routes.js';
 import kycRoutes from './routes/kyc.routes.js';
+import documentRoutes from './routes/document.routes.js';
 
 const app = express();
 
@@ -28,8 +29,8 @@ app.use(cookieParser());
 
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/kyc', kycRoutes);
-/* app.use('/api/v1/kyc', kycRoutes);        ← next
-// app.use('/api/v1/documents', documentRoutes);    
+app.use('/api/v1/documents', documentRoutes);
+/*      ← next
 // app.use('/api/v1/face', faceRoutes);
 // app.use('/api/v1/admin', adminRoutes);
 // app.use('/api/v1/webhooks', webhookRoutes);*/
