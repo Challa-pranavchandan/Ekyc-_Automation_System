@@ -2,7 +2,7 @@
 import dotenv from "dotenv"
 import connectDB from "./db/index.js";
 import { app } from "./app.js";
-import { createWorker } from 'tesseract.js';
+
 
 
 dotenv.config({
@@ -19,7 +19,7 @@ connectDB()
     })
     .catch((error) => {
         console.error("Failed to connect to DB", error);
-        process.exit(1);
+        server.close(() => process.exit(1));
     })
 
 

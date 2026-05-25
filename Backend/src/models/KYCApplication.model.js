@@ -137,16 +137,15 @@ kycApplicationSchema.virtual('faceVerification', {
 });
 
 // Pre-save: auto-generate applicationNo
-kycApplicationSchema.pre('save', async function (next) {
-  if (this.applicationNo) return next();
+kycApplicationSchema.pre('save', async function () {
+  if (this.applicationNo) return;
   const year = new Date().getFullYear();
   const count = await mongoose.model('KYCApplication').countDocuments();
   this.applicationNo = `KYC-${year}-${String(count + 1).padStart(5, '0')}`;
-  next();
 });
 
 // Pre-save: set submittedAt when status moves past draft
-kycApplicationSchema.pre('save', function (next) {
+kycApplicationSchema.pre('save', async function () {
   if (
     this.isModified('status') &&
     this.status !== 'draft' &&
@@ -154,7 +153,6 @@ kycApplicationSchema.pre('save', function (next) {
   ) {
     this.submittedAt = new Date();
   }
-  next();
 });
 
 const KYCApplication = mongoose.model('KYCApplication', kycApplicationSchema);

@@ -1,6 +1,6 @@
 # eKYC Backend — Route Test Results
 
-**Base URL:** `http://localhost:8000/api/v1/auth`  
+**Base URL:** `http://localhost:8000/api/v1/users`  
 **Date:** 2026-05-25 13:47 IST
 
 ## Results Summary

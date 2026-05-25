@@ -103,14 +103,13 @@ documentSchema.index({ verificationStatus: 1 });
 documentSchema.index({ createdAt: -1 });
 
 // Validate: passport requires front only; aadhaar requires front + back
-documentSchema.pre('save', async function (next) {
+documentSchema.pre('save', async function () {
   if (this.type === 'passport' && this.side === 'back') {
-    return next(new Error('Passport does not have a back side'));
+    throw new Error('Passport does not have a back side');
   }
   if (this.type === 'pan' && this.side === 'back') {
-    return next(new Error('PAN card does not require a back side'));
+    throw new Error('PAN card does not require a back side');
   }
-  next();
 });
 
 const Document = mongoose.model('Document', documentSchema);

@@ -148,7 +148,7 @@ faceVerificationSchema.index({ overallStatus: 1 });
 faceVerificationSchema.index({ createdAt: -1 });
 
 // Validate: overall status derived from liveness + faceMatch
-faceVerificationSchema.pre('save', function (next) {
+faceVerificationSchema.pre('save', async function () {
   if (
     this.liveness.pass !== null &&
     this.faceMatch.pass !== null
@@ -157,7 +157,6 @@ faceVerificationSchema.pre('save', function (next) {
       this.liveness.pass && this.faceMatch.pass ? 'passed' : 'failed';
     this.processedAt = new Date();
   }
-  next();
 });
 
 const FaceVerification = mongoose.model('FaceVerification', faceVerificationSchema);
