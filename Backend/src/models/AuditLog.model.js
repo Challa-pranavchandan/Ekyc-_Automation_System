@@ -80,9 +80,10 @@ const auditLogSchema = new mongoose.Schema(
       type: String,
       trim: true,
       match: [
-        /^(\d{1,3}\.){3}\d{1,3}$|^[\da-fA-F:]+$/,
+        /^[0-9a-fA-F:.]+$/,
         'Invalid IP address format',
       ],
+
       default: null,
     },
     userAgent: {

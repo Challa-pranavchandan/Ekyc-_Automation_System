@@ -1,0 +1,60 @@
+[dotenv@17.2.3] injecting env (10) from .env -- tip: ≡ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
+(node:23616) [MONGOOSE] Warning: Duplicate schema index on {"email":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:23616) [MONGOOSE] Warning: Duplicate schema index on {"applicationNo":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+[
+  {
+    "personalInfo": {
+      "address": {
+        "line1": "123 Test Street",
+        "city": "Test City",
+        "state": "Test State",
+        "pincode": "123456",
+        "country": "India"
+      },
+      "fullName": "Test Ekyc User",
+      "dateOfBirth": "1990-01-01T00:00:00.000Z",
+      "gender": "male",
+      "nationality": "Indian"
+    },
+    "_id": "6a1425a0dcbc853a189a7b14",
+    "userId": "6a14243fc758b4ab9efcadf7",
+    "status": "document_uploaded",
+    "currentStep": "document_upload",
+    "overallScore": null,
+    "reviewedBy": null,
+    "rejectionReason": null,
+    "reviewNotes": null,
+    "submittedAt": "2026-05-25T10:35:15.216Z",
+    "reviewedAt": null,
+    "expiresAt": null,
+    "createdAt": "2026-05-25T10:34:08.654Z",
+    "updatedAt": "2026-05-25T11:14:28.478Z",
+    "applicationNo": "KYC-2026-00001",
+    "__v": 0,
+    "id": "6a1425a0dcbc853a189a7b14"
+  },
+  {
+    "personalInfo": {
+      "address": {
+        "country": "India"
+      }
+    },
+    "_id": "6a168db1e9e4715c557d4383",
+    "userId": "6a168db0e9e4715c557d436f",
+    "applicationNo": "FACE-1779862961260",
+    "status": "document_uploaded",
+    "currentStep": "face_verification",
+    "overallScore": null,
+    "reviewedBy": null,
+    "rejectionReason": null,
+    "reviewNotes": null,
+    "submittedAt": "2026-05-27T06:22:41.262Z",
+    "reviewedAt": null,
+    "expiresAt": null,
+    "createdAt": "2026-05-27T06:22:41.262Z",
+    "updatedAt": "2026-05-27T06:22:41.262Z",
+    "__v": 0,
+    "id": "6a168db1e9e4715c557d4383"
+  }
+]

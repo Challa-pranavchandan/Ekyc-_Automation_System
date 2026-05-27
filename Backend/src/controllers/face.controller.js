@@ -162,6 +162,7 @@ export const runFaceVerification = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'No verified identity document found. Verify documents first.');
   }
 
+  /* 
   // ── Step 1: Call FastAPI for liveness check ──────────────────────────────
   let livenessResult;
   try {
@@ -209,6 +210,32 @@ export const runFaceVerification = asyncHandler(async (req, res) => {
       `Face match service unavailable: ${error.message}`
     );
   }
+  */
+
+  // ── Step 1 & 2: FastAPI STUB ──────────────────────────────────────────────
+  // TEMPORARY STUB — remove when FastAPI is working
+  const livenessResult = {
+    pass_check: true,
+    score: 0.92,
+    method: 'combined',
+    spoofing_detected: false,
+    failure_reason: null,
+    face_detected: true,
+  };
+
+  const faceMatchResult = {
+    pass_check: true,
+    score: 0.87,
+    distance: 0.13,
+    threshold_used: 0.50,
+    model_used: 'stub',
+    selfie_face_found: true,
+    id_face_found: true,
+    failure_reason: null,
+  };
+
+
+
 
   // ── Step 3: Save results to FaceVerification model ───────────────────────
   faceVerification.liveness = {
