@@ -50,7 +50,7 @@ const authLimiter = rateLimit({
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api/v1/users', authLimiter, userRoutes);
+app.use('/api/v1/auth', authLimiter, userRoutes);
 app.use('/api/v1/kyc', kycRoutes);
 app.use('/api/v1/documents', documentRoutes);
 app.use('/api/v1/face', faceRoutes);

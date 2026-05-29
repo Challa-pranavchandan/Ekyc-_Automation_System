@@ -2,13 +2,19 @@ import Tesseract from 'tesseract.js';
 
 // ─── Run OCR on image URL ─────────────────────────────────────────────────────
 const runOCR = async (imageUrl) => {
-  const { data } = await Tesseract.recognize(imageUrl, 'eng', {
-    logger: () => {}, // silence logs
-  });
-  return {
-    text: data.text,
-    confidence: data.confidence / 100, // normalize to 0-1
-  };
+  const worker = await Tesseract.createWorker('eng');
+  try {
+    const { data } = await worker.recognize(imageUrl);
+    return {
+      text: data.text,
+      confidence: data.confidence / 100,
+    };
+  } catch (error) {
+    console.error('Tesseract Worker Error:', error.message);
+    throw error;
+  } finally {
+    await worker.terminate();
+  }
 };
 
 // ─── Extract Aadhaar fields ───────────────────────────────────────────────────

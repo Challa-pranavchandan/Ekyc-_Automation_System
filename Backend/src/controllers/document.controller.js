@@ -51,7 +51,8 @@ export const uploadDocument = asyncHandler(async (req, res) => {
 
   // Upload to Cloudinary under ekyc/documents/{applicationId} folder
   const folder = `ekyc/documents/${applicationId}`;
-  const uploaded = await uploadOnCloudinary(req.file.path, folder);
+  // Keep local file for OCR processing (more reliable than URL)
+  const uploaded = await uploadOnCloudinary(req.file.path, folder, false);
 
   if (!uploaded) {
     throw new ApiError(500, 'Failed to upload document to storage');
@@ -70,7 +71,8 @@ export const uploadDocument = asyncHandler(async (req, res) => {
   });
 
   // Run OCR asynchronously — don't make user wait
-  runOCRInBackground(document._id, uploaded.url, type);
+  // Run OCR asynchronously using local file — delete file after done
+  runOCRInBackground(document._id, req.file.path, type, true);
 
   // Update application step if first document
   if (application.currentStep === KYC_STEPS.DOCUMENT_UPLOAD) {
@@ -101,9 +103,13 @@ export const uploadDocument = asyncHandler(async (req, res) => {
 
 // ─── OCR Background Runner ────────────────────────────────────────────────────
 // Runs after upload response is sent — updates document with extracted data
-const runOCRInBackground = async (documentId, imageUrl, documentType) => {
+const runOCRInBackground = async (documentId, filePath, documentType, deleteFile = false) => {
   try {
-    const extracted = await processDocument(imageUrl, documentType);
+    const { Document } = await import('../models/index.js'); // Ensure model is available
+    const { VERIFICATION_STATUS } = await import('../constants.js');
+    const fs = await import('fs');
+
+    const extracted = await processDocument(filePath, documentType);
 
     await Document.findByIdAndUpdate(documentId, {
       extractedData: {
@@ -127,10 +133,26 @@ const runOCRInBackground = async (documentId, imageUrl, documentType) => {
     console.log(`OCR completed for document: ${documentId}`);
   } catch (error) {
     console.error(`OCR failed for document ${documentId}:`, error.message);
-    await Document.findByIdAndUpdate(documentId, {
-      verificationStatus: VERIFICATION_STATUS.FAILED,
-      failureReason: error.message,
-    });
+    try {
+      await Document.findByIdAndUpdate(documentId, {
+        verificationStatus: VERIFICATION_STATUS.FAILED,
+        failureReason: error.message,
+      });
+    } catch (dbError) {
+      console.error('Failed to update document error status:', dbError.message);
+    }
+  } finally {
+    // Cleanup local file if requested
+    if (deleteFile) {
+      try {
+        const fs = await import('fs');
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (err) {
+        console.error('Failed to delete temp file after OCR:', err.message);
+      }
+    }
   }
 };
 
@@ -158,23 +180,26 @@ export const getOCRResult = asyncHandler(async (req, res) => {
     throw new ApiError(403, 'Access denied');
   }
 
-  return res.status(200).json(
-    new ApiResponse(200, 'OCR result fetched', {
-      verificationStatus: document.verificationStatus,
-      ocrConfidence: document.ocrConfidence,
-      extractedData: {
-        name: document.extractedData?.name,
-        dateOfBirth: document.extractedData?.dateOfBirth,
-        idNumber: document.extractedData?.idNumber,
-        address: document.extractedData?.address,
-        gender: document.extractedData?.gender,
-        expiryDate: document.extractedData?.expiryDate,
-        fatherName: document.extractedData?.fatherName,
-        // rawText excluded — internal only
-      },
-      processedAt: document.processedAt,
-    })
-  );
+  return res
+    .status(200)
+    .set('Cache-Control', 'no-store, no-cache, must-revalidate')
+    .set('Pragma', 'no-cache')
+    .json(
+      new ApiResponse(200, 'OCR result fetched', {
+        verificationStatus: document.verificationStatus,
+        ocrConfidence: document.ocrConfidence,
+        extractedData: {
+          name: document.extractedData?.name,
+          dateOfBirth: document.extractedData?.dateOfBirth,
+          idNumber: document.extractedData?.idNumber,
+          address: document.extractedData?.address,
+          gender: document.extractedData?.gender,
+          expiryDate: document.extractedData?.expiryDate,
+          fatherName: document.extractedData?.fatherName,
+        },
+        processedAt: document.processedAt,
+      })
+    );
 });
 
 // ─── Get All Documents for Application ───────────────────────────────────────

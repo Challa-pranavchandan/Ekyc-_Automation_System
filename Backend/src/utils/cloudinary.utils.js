@@ -9,7 +9,7 @@ cloudinary.config({
 });
 
 // ─── Upload file to Cloudinary ────────────────────────────────────────────────
-export const uploadOnCloudinary = async (filePath, folder = 'ekyc') => {
+export const uploadOnCloudinary = async (filePath, folder = 'ekyc', removeOnSuccess = true) => {
   try {
     console.log('Attempting Cloudinary upload for:', filePath);
     console.log('Config:', {
@@ -25,8 +25,10 @@ export const uploadOnCloudinary = async (filePath, folder = 'ekyc') => {
       secure: true,
     });
 
-    // Delete local temp file after successful upload
-    fs.unlinkSync(filePath);
+    // Delete local temp file after successful upload (if requested)
+    if (removeOnSuccess && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
 
     return {
       url: response.secure_url,

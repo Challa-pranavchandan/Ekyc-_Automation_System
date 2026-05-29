@@ -1,7 +1,0 @@
-{
-  "testEmail": "test.ekyc.user@example.com",
-  "testPassword": "TestPassword123!",
-  "testName": "Test Ekyc User",
-  "testPhone": "9876543210",
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YTE0MjQzZmM3NThiNGFiOWVmY2FkZjciLCJlbWFpbCI6InRlc3QuZWt5Yy51c2VyQGV4YW1wbGUuY29tIiwicm9sZSI6ImFwcGxpY2FudCIsImlhdCI6MTc3OTcwNTM3OSwiZXhwIjoxNzc5NzkxNzc5fQ.5wT1ymMls6DMHrJewjJouw1uhT6Jf6dArd3I2haFi3w"
-}
