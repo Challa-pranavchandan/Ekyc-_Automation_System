@@ -12,7 +12,7 @@ The **E-KYC (Electronic Know Your Customer)** project is a modern, secure, and a
 The system architecture is designed around **Microservice Principles**, ensuring that complex, high-latency tasks (like OCR and Biometric Match) are decoupled from the user-facing transactional logic.
 
 ### Chosen Architecture: Modular Service Design
-We have implemented a **Modular Monolith** that is ready for horizontal scaling:
+I have implemented a **Modular Monolith** that is ready for horizontal scaling:
 1.  **Identity Service (Auth)**: Manages secure user lifecycles, JWT issuing, and role-based access control (RBAC).
 2.  **Document Engine (OCR)**: Leverages **Tesseract.js** to process legal documents. By isolating this, we can easily swap the engine for a cloud-native OCR service (like AWS Textract) in the future.
 3.  **Biometric Service (FaceMatch)**: Handles facial data processing. Decoupling this allows for specialized security auditing on biometric data.
